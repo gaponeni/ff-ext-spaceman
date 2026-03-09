@@ -1,0 +1,77 @@
+:root {
+  --space-blue: #2563eb;
+  --space-turquoise: #0d9488;
+  --space-green: #16a34a;
+  --space-yellow: #ca8a04;
+  --space-orange: #ea580c;
+  --space-red: #dc2626;
+  --space-pink: #db2777;
+  --space-purple: #7c3aed;
+  --space-toolbar: #475569;
+}
+
+body {
+  margin: 0;
+  font-family: "SF Pro Text", "Segoe UI", "Noto Sans", sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.popup {
+  width: 180px;
+  padding: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.warning {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #7f1d1d;
+  background: #fef2f2;
+  font-size: 12px;
+}
+
+.warning.hidden {
+  display: none;
+}
+
+.list {
+  display: grid;
+  gap: 6px;
+}
+
+.item {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.item.active {
+  color: #fff;
+  border-color: transparent;
+}
+
+.item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
