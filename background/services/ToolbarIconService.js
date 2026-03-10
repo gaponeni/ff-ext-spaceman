@@ -99,6 +99,9 @@ class ToolbarIconService {
   }
 
   async initWindowIcons() {
+    const support = await this.spaceService.getContainersSupport();
+    if (!support.available) return;
+
     const windows = await this.browser.windows.getAll();
     const spaces = await this.spaceService.getContainerSpaces();
 
