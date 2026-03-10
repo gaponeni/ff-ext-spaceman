@@ -1,0 +1,24 @@
+{
+  "name": "space-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Firefox extension that treats Container Tabs as workspace-like spaces.",
+  "license": "MIT",
+  "scripts": {
+    "check:manifest": "node -e \"try { JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest.json OK'); } catch(e) { console.error('Invalid JSON'); process.exit(1); }\"",
+    "check:js": "node -e \"const fs=require('fs'); const path=require('path'); const getAllFiles = (dir) => { if (!fs.existsSync(dir)) return []; return fs.readdirSync(dir).reduce((files, file) => { const name = path.join(dir, file); return fs.statSync(name).isDirectory() ? [...files, ...getAllFiles(name)] : [...files, name]; }, []); }; const files = ['background.js', ...getAllFiles('background'), ...getAllFiles('popup')].filter(f => f.endsWith('.js')); files.forEach(f => { const res = require('child_process').spawnSync('node', ['--check', f], {stdio: 'inherit'}); if (res.status !== 0) process.exit(1); }); console.log('JS Syntax OK');\"",
+    "lint": "web-ext lint --source-dir . --ignore-files \".git/**\" \".github/**\" \"node_modules/**\" \"web-ext-artifacts/**\" \"package.json\" \"package-lock.json\" \"CHANGELOG.md\" \"README.md\" \"LICENSE\" \".gitignore\" \".DS_Store\" \"Thumbs.db\"",
+    "check": "npm run check:manifest && npm run check:js && npm run lint",
+    "build": "npm run check && web-ext build --source-dir . --artifacts-dir web-ext-artifacts --filename \"space-manager-{version}.xpi\" --overwrite-dest --ignore-files \".git/**\" \".github/**\" \"node_modules/**\" \"web-ext-artifacts/**\" \"package.json\" \"package-lock.json\" \"CHANGELOG.md\" \"README.md\" \"LICENSE\" \".gitignore\" \".DS_Store\" \"Thumbs.db\"",
+    "version": "node -e \"const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));manifest.version=pkg.version;fs.writeFileSync('manifest.json', JSON.stringify(manifest, null, 2) + '\\n');console.log('Updated manifest.json to', pkg.version);\"",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major"
+  },
+  "devDependencies": {
+    "web-ext": "^8.8.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -28,3 +28,17 @@ coverage/
 # Env
 .env
 .env.*
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Firefox specific
+.firefox-config/
+.firefox-profile/
+
+# Source Map files 
+*.map
+
+# AMO
+.web-ext-config.js
