@@ -61,20 +61,34 @@ class ContainerSpaceService {
     return this.getContainerSpaces();
   }
 
-  async getWindowActiveSpaceId(windowId) {
+  async isPrivateWindow(windowId) {
+    if (typeof windowId !== "number") return false;
+    try {
+      const window = await this.browser.windows.get(windowId);
+      return Boolean(window?.incognito);
+    } catch {
+      return false;
+    }
+  }
+
+  async getWindowActiveSpaceId(windowId, isPrivate) {
     const spaces = await this.getContainerSpaces();
     const validIds = new Set(spaces.map((s) => s.id));
-    const activeByWindow = await this.store.getActiveByWindow();
-    const value = activeByWindow[String(windowId)];
+    const value = await this.store.getWindowActiveSpaceId(
+      windowId,
+      typeof isPrivate === "boolean" ? isPrivate : await this.isPrivateWindow(windowId)
+    );
     if (value === null) return null;
     if (value && validIds.has(value)) return value;
     return null;
   }
 
-  async setWindowActiveSpaceId(windowId, spaceId) {
-    const activeByWindow = await this.store.getActiveByWindow();
-    activeByWindow[String(windowId)] = spaceId ?? null;
-    await this.store.setActiveByWindow(activeByWindow);
+  async setWindowActiveSpaceId(windowId, spaceId, isPrivate) {
+    await this.store.setWindowActiveSpaceId(
+      windowId,
+      spaceId ?? null,
+      typeof isPrivate === "boolean" ? isPrivate : await this.isPrivateWindow(windowId)
+    );
   }
 
   async resolveTargetCookieStoreId(spaceId) {
@@ -91,9 +105,18 @@ class ContainerSpaceService {
       return { spaces: [], activeSpaceId: null, support };
     }
 
+    const isPrivate = await this.isPrivateWindow(windowId);
     const spaces = await this.ensureState();
-    const activeSpaceId = await this.getWindowActiveSpaceId(windowId);
-    return { spaces, activeSpaceId, support };
+    const activeSpaceId = await this.getWindowActiveSpaceId(windowId, isPrivate);
+    return {
+      spaces,
+      activeSpaceId,
+      support,
+      privateBrowsing: {
+        active: isPrivate,
+        persistentState: !isPrivate
+      }
+    };
   }
 }
 
