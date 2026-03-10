@@ -40,9 +40,11 @@ class BackgroundEventController {
     this.browser.tabs.onActivated.addListener((info) => this.switchService.handleTabActivated(info));
     this.browser.tabs.onCreated.addListener((tab) => this.switchService.handleTabCreated(tab));
 
-    this.browser.contextualIdentities.onCreated.addListener(() => this.handleContainersChanged());
-    this.browser.contextualIdentities.onUpdated.addListener(() => this.handleContainersChanged());
-    this.browser.contextualIdentities.onRemoved.addListener(() => this.handleContainersChanged());
+    if (this.browser.contextualIdentities) {
+      this.browser.contextualIdentities.onCreated.addListener(() => this.handleContainersChanged());
+      this.browser.contextualIdentities.onUpdated.addListener(() => this.handleContainersChanged());
+      this.browser.contextualIdentities.onRemoved.addListener(() => this.handleContainersChanged());
+    }
   }
 }
 

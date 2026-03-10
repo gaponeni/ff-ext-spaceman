@@ -19,13 +19,18 @@ function renderWarning() {
 }
 
 async function switchTo(spaceId) {
-  const result = await browser.runtime.sendMessage({ type: "space:switch", spaceId });
-  if (result?.ok === false) {
+  try {
+    const result = await browser.runtime.sendMessage({ type: "space:switch", spaceId });
+    if (result?.ok === false) {
+      warningNode.classList.remove("hidden");
+      warningNode.textContent = result.error || "Switch failed.";
+      return;
+    }
+    window.close();
+  } catch (error) {
     warningNode.classList.remove("hidden");
-    warningNode.textContent = result.error || "Switch failed.";
-    return;
+    warningNode.textContent = error?.message || "Switch failed.";
   }
-  window.close();
 }
 
 function createItem(label, active, color, onClick) {
@@ -78,8 +83,26 @@ function applyState(next) {
 }
 
 async function refresh() {
-  const next = await browser.runtime.sendMessage({ type: "space:get-state" });
-  applyState(next);
+  try {
+    const next = await browser.runtime.sendMessage({ type: "space:get-state" });
+    applyState(next || {
+      spaces: [],
+      activeSpaceId: null,
+      support: {
+        available: false,
+        message: "Extension state is unavailable."
+      }
+    });
+  } catch (error) {
+    applyState({
+      spaces: [],
+      activeSpaceId: null,
+      support: {
+        available: false,
+        message: error?.message || "Extension state is unavailable."
+      }
+    });
+  }
 }
 
 refresh();
