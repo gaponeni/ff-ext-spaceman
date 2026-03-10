@@ -1,58 +1,66 @@
 # Space Manager
 
-Space Manager is a Firefox WebExtension that treats **Container Tabs** as workspace-like Spaces.
+<p align="center">
+  <img src="docs/amo/icon-128.png" alt="Space Manager icon" width="96" height="96">
+</p>
 
-## What it does
+Space Manager is a Firefox WebExtension that turns Container Tabs into workspace-like Spaces per window.
 
-- Reads Spaces directly from Firefox containers (`contextualIdentities`).
-- Provides `No Space (default)` plus all existing containers in the toolbar popup.
-- Switches Space per browser window:
-  - shows tabs of the selected Space,
-  - hides tabs from other Spaces,
-  - discards hidden tabs (best effort) to reduce memory usage.
+[Install from AMO](https://addons.mozilla.org/en-US/firefox/addon/space-manager/) | [MIT License](LICENSE)
+
+## Screenshot
+
+![Space Manager screenshot](docs/amo/screenshot-1.png)
+
+## Features
+
+- Reads Spaces from Firefox containers (`contextualIdentities`).
+- Shows `No Space (default)` and all existing containers in the toolbar popup.
+- Switches active Space per browser window.
+- Shows tabs from the selected Space and hides tabs from other Spaces.
+- Discards hidden tabs on a best-effort basis to reduce memory usage.
 - Remembers the last active tab per Space and window.
 - Keeps tab groups isolated by Space and restores group metadata when returning.
-- Colors the toolbar icon background based on the active Space color.
-- Automatically moves newly created default-store tabs into the active Space or opener container when possible.
+- Colors the toolbar icon based on the active Space color.
+- Recreates some newly created default-store tabs inside the active Space or opener container.
 
-## Private browsing
+## Privacy and Data Handling
 
-- Space Manager can run in private windows without persisting private browsing data to `storage.local`.
-- Private-window state is kept in memory for the current private session only.
-- Closing a private window clears its remembered active Space, last-tab state, and tab-group snapshots.
+- The extension does not send browsing data, cookies, or tab metadata to remote servers.
+- The extension does not load or execute remote code.
+- In private windows, Space state is session-only and is not persisted to `storage.local`.
+- Closing a private window clears remembered Space, last-tab state, and tab-group snapshots for that private window.
 
-## Automatic tab behavior
+## How It Works
 
-- When you switch Spaces, the extension shows tabs that belong to the selected container and hides tabs from other containers in the same window.
-- Hidden tabs may be discarded on a best-effort basis to reduce memory usage.
-- When Firefox creates a new tab in the default cookie store while a Space is active, the extension may recreate that tab inside the active container and close the original tab so the window stays aligned with the current Space.
-
-## Source of truth
-
-There is no separate Space CRUD in the extension.
-
+- Firefox containers are the source of truth.
 - Create, rename, and delete containers in Firefox settings.
 - Space Manager reflects those container changes automatically.
-- The extension does not create or manage its own separate container records.
+- The extension does not maintain a separate container CRUD model.
 
-## Project structure
+## Development
 
-- `background/core/*`: shared namespace, constants, utility helpers
+Prerequisites:
+- Node.js 20+
+
+Useful scripts:
+- `npm run check`
+- `npm run lint`
+- `npm run build`
+
+Temporary local run:
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on...**.
+3. Select `manifest.json`.
+
+## Project Structure
+
+- `background/core/*`: shared namespace, constants, and utility helpers
 - `background/storage/*`: local state storage
-- `background/services/*`: core business logic (spaces, switching, icon rendering)
+- `background/services/*`: spaces, switching, and icon behavior
 - `background/controllers/*`: browser event and runtime message handling
-- `background.js`: dependency wiring (composition root)
+- `background.js`: dependency wiring
 - `popup/*`: toolbar popup UI
-
-## Local run (temporary add-on)
-
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on...**
-3. Select `manifest.json`
-
-## License
-
-MIT.
 
 ## References
 
@@ -60,3 +68,7 @@ MIT.
 - [MDN contextualIdentities API](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/contextualIdentities)
 - [MDN tabs.hide](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/hide)
 - [MDN tabs.discard](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/discard)
+
+## License
+
+MIT

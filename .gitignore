@@ -20,6 +20,7 @@ Desktop.ini
 dist/
 build/
 web-ext-artifacts/
+.amo-upload-uuid
 *.xpi
 
 # Coverage
