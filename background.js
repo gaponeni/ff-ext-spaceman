@@ -5,6 +5,7 @@ const constants = NS.constants;
 const utils = NS.utils;
 
 const store = new NS.classes.LocalWindowStateStore(browserApi, constants);
+const settingsService = new NS.classes.ExtensionSettingsService(browserApi, constants);
 const spaceService = new NS.classes.ContainerSpaceService(browserApi, constants, store);
 const iconService = new NS.classes.ToolbarIconService(browserApi, constants, spaceService);
 const switchService = new NS.classes.SpaceSwitchService(
@@ -13,7 +14,8 @@ const switchService = new NS.classes.SpaceSwitchService(
   utils,
   store,
   spaceService,
-  iconService
+  iconService,
+  settingsService
 );
 const eventController = new NS.classes.BackgroundEventController(
   browserApi,

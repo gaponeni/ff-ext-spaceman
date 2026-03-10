@@ -8,7 +8,7 @@ NS.utils.errMsg = function errMsg(error) {
 
 NS.utils.isTransferableUrl = function isTransferableUrl(url) {
   if (!url || typeof url !== "string") return false;
-  if (url.startsWith("about:")) return false;
+  // if (url.startsWith("about:")) return false;
   return true;
 };
 

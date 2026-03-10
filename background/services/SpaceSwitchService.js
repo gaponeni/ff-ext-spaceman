@@ -1,13 +1,14 @@
 var NS = SpaceManager;
 
 class SpaceSwitchService {
-  constructor(browserApi, constants, utils, store, spaceService, iconService) {
+  constructor(browserApi, constants, utils, store, spaceService, iconService, settingsService) {
     this.browser = browserApi;
     this.constants = constants;
     this.utils = utils;
     this.store = store;
     this.spaceService = spaceService;
     this.iconService = iconService;
+    this.settingsService = settingsService;
     this.switchQueueByWindow = new Map();
   }
 
@@ -246,15 +247,19 @@ class SpaceSwitchService {
       }
     }
 
-    const discardIds = allTabs
-      .filter((t) => (t.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID) !== targetStore && this.utils.canDiscard(t, activeTarget?.id))
-      .map((t) => t.id);
+    const shouldDiscard = await this.settingsService.shouldAutoDiscardHiddenTabs();
+    if (shouldDiscard) {
+      const discardIds = allTabs
+        .filter((t) => (t.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID) !== targetStore && this.utils.canDiscard(t, activeTarget?.id))
+        .map((t) => t.id)
+        .filter(Boolean);
 
-    for (const id of discardIds) {
-      try {
-        await this.browser.tabs.discard(id);
-      } catch {
-        // ignore
+      for (const id of discardIds) {
+        try {
+          await this.browser.tabs.discard(id);
+        } catch {
+          // ignore
+        }
       }
     }
 

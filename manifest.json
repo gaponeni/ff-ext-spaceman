@@ -9,6 +9,7 @@
       "background/core/constants.js",
       "background/core/utils.js",
       "background/storage/LocalWindowStateStore.js",
+      "background/services/ExtensionSettingsService.js",
       "background/services/ContainerSpaceService.js",
       "background/services/ToolbarIconService.js",
       "background/services/SpaceSwitchService.js",
@@ -20,6 +21,10 @@
   "action": {
     "default_title": "Space Manager",
     "default_popup": "popup/index.html"
+  },
+  "options_ui": {
+    "page": "settings/index.html",
+    "open_in_tab": true
   },
   "browser_specific_settings": {
     "gecko": {

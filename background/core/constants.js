@@ -3,6 +3,8 @@ var NS = SpaceManager;
 NS.constants.LOCAL_ACTIVE_KEY = "spaces.activeWindow.v1";
 NS.constants.LOCAL_LAST_TAB_KEY = "spaces.lastActiveTabByWindow.v1";
 NS.constants.LOCAL_GROUP_SNAPSHOT_KEY = "spaces.groupSnapshotsByWindow.v1";
+NS.constants.LOCAL_SETTINGS_KEY = "spaces.settings.v1";
+NS.constants.SETTING_AUTO_DISCARD_HIDDEN_TABS = "autoDiscardHiddenTabs";
 
 NS.constants.DEFAULT_COOKIE_STORE_ID = "firefox-default";
 NS.constants.COLOR_HEX = {
