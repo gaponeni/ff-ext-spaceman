@@ -1,16 +1,12 @@
 # Space Manager
 
-<p align="center">
-  <img src="docs/amo/icon-128.png" alt="Space Manager icon" width="96" height="96">
+<p>
+  <img src="docs/amo/icon-128.png" alt="Space Manager icon" width="32" height="32">
 </p>
 
 Space Manager is a Firefox WebExtension that turns Container Tabs into workspace-like Spaces per window.
 
 [Install from AMO](https://addons.mozilla.org/en-US/firefox/addon/space-manager/) | [MIT License](LICENSE)
-
-## Screenshot
-
-![Space Manager screenshot](docs/amo/screenshot-1.png)
 
 ## Features
 
@@ -18,11 +14,25 @@ Space Manager is a Firefox WebExtension that turns Container Tabs into workspace
 - Shows `No Space (default)` and all existing containers in the toolbar popup.
 - Switches active Space per browser window.
 - Shows tabs from the selected Space and hides tabs from other Spaces.
-- Discards hidden tabs on a best-effort basis to reduce memory usage.
+- Includes a setting to control whether hidden tabs are discarded on Space switch.
 - Remembers the last active tab per Space and window.
 - Keeps tab groups isolated by Space and restores group metadata when returning.
 - Colors the toolbar icon based on the active Space color.
 - Recreates some newly created default-store tabs inside the active Space or opener container.
+
+## Screenshots
+
+### Space Switcher
+
+<p>
+  <img src="docs/amo/screenshot-1.png" alt="Space Manager space switcher screenshot" width="150">
+</p>
+
+### Settings
+
+<p>
+  <img src="docs/amo/screenshot-2.png" alt="Space Manager settings screenshot" width="340">
+</p>
 
 ## Privacy and Data Handling
 
