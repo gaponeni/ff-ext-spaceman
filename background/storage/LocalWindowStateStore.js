@@ -4,6 +4,9 @@ class LocalWindowStateStore {
   constructor(browserApi, constants) {
     this.browser = browserApi;
     this.constants = constants;
+    this.privateActiveByWindow = {};
+    this.privateLastActiveTabsByWindow = {};
+    this.privateGroupSnapshotsByWindow = {};
   }
 
   async getActiveByWindow() {
@@ -24,8 +27,15 @@ class LocalWindowStateStore {
     await this.browser.storage.local.set({ [this.constants.LOCAL_LAST_TAB_KEY]: map });
   }
 
-  async rememberLastTab(windowId, cookieStoreId, tabId) {
+  async rememberLastTab(windowId, cookieStoreId, tabId, isPrivate = false) {
     if (!tabId) return;
+    if (isPrivate) {
+      const key = String(windowId);
+      const next = { ...(this.privateLastActiveTabsByWindow[key] || {}) };
+      next[cookieStoreId] = tabId;
+      this.privateLastActiveTabsByWindow[key] = next;
+      return;
+    }
     const map = await this.getLastActiveTabsByWindow();
     const key = String(windowId);
     const next = { ...(map[key] || {}) };
@@ -34,7 +44,10 @@ class LocalWindowStateStore {
     await this.setLastActiveTabsByWindow(map);
   }
 
-  async getRememberedTabId(windowId, cookieStoreId) {
+  async getRememberedTabId(windowId, cookieStoreId, isPrivate = false) {
+    if (isPrivate) {
+      return this.privateLastActiveTabsByWindow[String(windowId)]?.[cookieStoreId] || null;
+    }
     const map = await this.getLastActiveTabsByWindow();
     return map[String(windowId)]?.[cookieStoreId] || null;
   }
@@ -48,17 +61,49 @@ class LocalWindowStateStore {
     await this.browser.storage.local.set({ [this.constants.LOCAL_GROUP_SNAPSHOT_KEY]: map });
   }
 
-  async getGroupSnapshot(windowId, cookieStoreId) {
+  async getGroupSnapshot(windowId, cookieStoreId, isPrivate = false) {
+    if (isPrivate) {
+      return this.privateGroupSnapshotsByWindow[String(windowId)]?.[cookieStoreId] || [];
+    }
     const map = await this.getGroupSnapshotsByWindow();
     return map[String(windowId)]?.[cookieStoreId] || [];
   }
 
-  async setGroupSnapshot(windowId, cookieStoreId, groups) {
+  async setGroupSnapshot(windowId, cookieStoreId, groups, isPrivate = false) {
+    if (isPrivate) {
+      const key = String(windowId);
+      this.privateGroupSnapshotsByWindow[key] = this.privateGroupSnapshotsByWindow[key] || {};
+      this.privateGroupSnapshotsByWindow[key][cookieStoreId] = groups;
+      return;
+    }
     const map = await this.getGroupSnapshotsByWindow();
     const key = String(windowId);
     map[key] = map[key] || {};
     map[key][cookieStoreId] = groups;
     await this.setGroupSnapshotsByWindow(map);
+  }
+
+  async getWindowActiveSpaceId(windowId, isPrivate) {
+    if (isPrivate) return this.privateActiveByWindow[String(windowId)] ?? null;
+    const activeByWindow = await this.getActiveByWindow();
+    return activeByWindow[String(windowId)] ?? null;
+  }
+
+  async setWindowActiveSpaceId(windowId, spaceId, isPrivate) {
+    if (isPrivate) {
+      this.privateActiveByWindow[String(windowId)] = spaceId ?? null;
+      return;
+    }
+    const activeByWindow = await this.getActiveByWindow();
+    activeByWindow[String(windowId)] = spaceId ?? null;
+    await this.setActiveByWindow(activeByWindow);
+  }
+
+  clearPrivateWindowState(windowId) {
+    const key = String(windowId);
+    delete this.privateActiveByWindow[key];
+    delete this.privateLastActiveTabsByWindow[key];
+    delete this.privateGroupSnapshotsByWindow[key];
   }
 }
 

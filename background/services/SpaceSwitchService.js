@@ -40,6 +40,10 @@ class SpaceSwitchService {
     return next;
   }
 
+  async isPrivateWindow(windowId) {
+    return this.spaceService.isPrivateWindow(windowId);
+  }
+
   buildStableTabRef(tab) {
     return {
       tabId: tab.id || null,
@@ -69,7 +73,7 @@ class SpaceSwitchService {
     }, null);
   }
 
-  async captureAndDetachGroups(windowId, cookieStoreId) {
+  async captureAndDetachGroups(windowId, cookieStoreId, isPrivate) {
     if (!this.supportsTabGroups()) return;
 
     const tabsInStore = await this.listTabsByStore(windowId, cookieStoreId);
@@ -86,7 +90,7 @@ class SpaceSwitchService {
     }
 
     if (byGroupId.size === 0) {
-      await this.store.setGroupSnapshot(windowId, cookieStoreId, []);
+      await this.store.setGroupSnapshot(windowId, cookieStoreId, [], isPrivate);
       return;
     }
 
@@ -114,7 +118,7 @@ class SpaceSwitchService {
       ungroupIds.push(...tabIds);
     }
 
-    await this.store.setGroupSnapshot(windowId, cookieStoreId, captured);
+    await this.store.setGroupSnapshot(windowId, cookieStoreId, captured, isPrivate);
     try {
       await this.browser.tabs.ungroup(ungroupIds);
     } catch {
@@ -122,9 +126,9 @@ class SpaceSwitchService {
     }
   }
 
-  async restoreGroupsForStore(windowId, cookieStoreId) {
+  async restoreGroupsForStore(windowId, cookieStoreId, isPrivate) {
     if (!this.supportsTabGroups()) return;
-    const groups = await this.store.getGroupSnapshot(windowId, cookieStoreId);
+    const groups = await this.store.getGroupSnapshot(windowId, cookieStoreId, isPrivate);
     if (!groups.length) return;
 
     const tabsInStore = await this.listTabsByStore(windowId, cookieStoreId);
@@ -166,7 +170,7 @@ class SpaceSwitchService {
     }
 
     if (restoredGroups.length) {
-      await this.store.setGroupSnapshot(windowId, cookieStoreId, restoredGroups);
+      await this.store.setGroupSnapshot(windowId, cookieStoreId, restoredGroups, isPrivate);
     }
   }
 
@@ -175,21 +179,22 @@ class SpaceSwitchService {
   }
 
   async switchSpaceInternal(spaceId, windowId) {
+    const isPrivate = await this.isPrivateWindow(windowId);
     const spaces = await this.spaceService.ensureState();
     const selected = spaceId ? spaces.find((s) => s.id === spaceId) : null;
     if (spaceId && !selected) throw new Error("Unknown space");
 
-    const currentSpaceId = await this.spaceService.getWindowActiveSpaceId(windowId);
+    const currentSpaceId = await this.spaceService.getWindowActiveSpaceId(windowId, isPrivate);
     if ((currentSpaceId || null) === (spaceId || null)) return;
 
     const currentActive = (await this.browser.tabs.query({ windowId, active: true }))[0] || null;
     if (currentActive?.id) {
       const currentStore = currentActive.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID;
-      await this.store.rememberLastTab(windowId, currentStore, currentActive.id);
+      await this.store.rememberLastTab(windowId, currentStore, currentActive.id, isPrivate);
     }
 
     const currentStore = await this.spaceService.resolveTargetCookieStoreId(currentSpaceId);
-    await this.captureAndDetachGroups(windowId, currentStore);
+    await this.captureAndDetachGroups(windowId, currentStore, isPrivate);
 
     const targetStore = await this.spaceService.resolveTargetCookieStoreId(spaceId);
     let targetTabs = await this.listTabsByStore(windowId, targetStore);
@@ -203,7 +208,7 @@ class SpaceSwitchService {
       targetTabs = [created];
     }
 
-    const rememberedTargetId = await this.store.getRememberedTabId(windowId, targetStore);
+    const rememberedTargetId = await this.store.getRememberedTabId(windowId, targetStore, isPrivate);
     const activeTarget = targetTabs.find((t) => t.id === rememberedTargetId) || targetTabs[0] || null;
 
     const targetTabIds = targetTabs.map((t) => t.id).filter(Boolean);
@@ -217,10 +222,10 @@ class SpaceSwitchService {
 
     if (activeTarget?.id) {
       await this.browser.tabs.update(activeTarget.id, { active: true });
-      await this.store.rememberLastTab(windowId, targetStore, activeTarget.id);
+      await this.store.rememberLastTab(windowId, targetStore, activeTarget.id, isPrivate);
     }
 
-    await this.restoreGroupsForStore(windowId, targetStore);
+    await this.restoreGroupsForStore(windowId, targetStore, isPrivate);
 
     const allTabs = await this.browser.tabs.query({ windowId });
     const hideIds = allTabs
@@ -253,7 +258,7 @@ class SpaceSwitchService {
       }
     }
 
-    await this.spaceService.setWindowActiveSpaceId(windowId, spaceId ?? null);
+    await this.spaceService.setWindowActiveSpaceId(windowId, spaceId ?? null, isPrivate);
     await this.iconService.setActionIcon(windowId, selected);
   }
 
@@ -261,7 +266,7 @@ class SpaceSwitchService {
     try {
       const tab = await this.browser.tabs.get(tabId);
       const storeId = tab.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID;
-      await this.store.rememberLastTab(windowId, storeId, tabId);
+      await this.store.rememberLastTab(windowId, storeId, tabId, Boolean(tab.incognito));
     } catch {
       // ignore
     }
@@ -270,6 +275,7 @@ class SpaceSwitchService {
   async handleTabCreated(tab) {
     try {
       if (!tab?.id || typeof tab.windowId !== "number") return;
+      const isPrivate = Boolean(tab.incognito);
 
       const createdStore = tab.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID;
       if (createdStore !== this.constants.DEFAULT_COOKIE_STORE_ID) return;
@@ -288,7 +294,7 @@ class SpaceSwitchService {
       }
 
       if (!targetStore || targetStore === this.constants.DEFAULT_COOKIE_STORE_ID) {
-        const activeSpaceId = await this.spaceService.getWindowActiveSpaceId(tab.windowId);
+        const activeSpaceId = await this.spaceService.getWindowActiveSpaceId(tab.windowId, isPrivate);
         if (activeSpaceId) {
           targetStore = await this.spaceService.resolveTargetCookieStoreId(activeSpaceId);
         }
@@ -333,7 +339,7 @@ class SpaceSwitchService {
       await this.browser.tabs.remove(tab.id);
 
       if (replacement?.id) {
-        await this.store.rememberLastTab(tab.windowId, targetStore, replacement.id);
+        await this.store.rememberLastTab(tab.windowId, targetStore, replacement.id, isPrivate);
       }
     } catch (error) {
       console.error("[tabs.onCreated] failed to move tab into active space", error);

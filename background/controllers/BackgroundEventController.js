@@ -19,8 +19,12 @@ class BackgroundEventController {
   }
 
   async handleWindowCreated(window) {
-    await this.spaceService.setWindowActiveSpaceId(window.id, null);
+    await this.spaceService.setWindowActiveSpaceId(window.id, null, Boolean(window?.incognito));
     await this.iconService.setActionIcon(window.id, null);
+  }
+
+  handleWindowRemoved(windowId) {
+    this.spaceService.store.clearPrivateWindowState(windowId);
   }
 
   async handleContainersChanged() {
@@ -32,6 +36,7 @@ class BackgroundEventController {
     this.browser.runtime.onInstalled.addListener(() => this.handleInstalled());
     this.browser.runtime.onStartup.addListener(() => this.handleStartup());
     this.browser.windows.onCreated.addListener((window) => this.handleWindowCreated(window));
+    this.browser.windows.onRemoved.addListener((windowId) => this.handleWindowRemoved(windowId));
     this.browser.tabs.onActivated.addListener((info) => this.switchService.handleTabActivated(info));
     this.browser.tabs.onCreated.addListener((tab) => this.switchService.handleTabCreated(tab));
 
