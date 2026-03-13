@@ -55,6 +55,22 @@ class RuntimeMessageController {
     }
   }
 
+  async handleResetView(message, senderWindowId) {
+    const windowId = await this.resolveWindowId(message.windowId, senderWindowId);
+    if (typeof windowId !== "number") return { ok: false, error: "No active browser window found." };
+
+    const support = await this.spaceService.getContainersSupport();
+    if (!support.available) return { ok: false, error: support.message };
+
+    try {
+      await this.switchService.resetSpacesView(windowId);
+      return { ok: true };
+    } catch (error) {
+      console.error("[space:reset-view] failed", error);
+      return { ok: false, error: this.utils.errMsg(error) };
+    }
+  }
+
   async handleMessage(message, sender) {
     const senderWindowId = sender.tab?.windowId;
 
@@ -64,6 +80,10 @@ class RuntimeMessageController {
 
     if (message?.type === "space:switch") {
       return this.handleSwitch(message, senderWindowId);
+    }
+
+    if (message?.type === "space:reset-view") {
+      return this.handleResetView(message, senderWindowId);
     }
 
     return undefined;

@@ -175,6 +175,46 @@ class SpaceSwitchService {
     }
   }
 
+  async resetSpacesView(windowId) {
+    return this.runWindowSwitchLocked(windowId, () => this.resetSpacesViewInternal(windowId));
+  }
+
+  async resetSpacesViewInternal(windowId) {
+    const isPrivate = await this.isPrivateWindow(windowId);
+    const allTabs = await this.browser.tabs.query({ windowId });
+    const allTabIds = allTabs.map((t) => t.id).filter(Boolean);
+
+    if (allTabIds.length > 0) {
+      try {
+        await this.browser.tabs.show(allTabIds);
+      } catch {
+        for (const id of allTabIds) {
+          try {
+            await this.browser.tabs.show(id);
+          } catch {
+            // ignore protected tabs
+          }
+        }
+      }
+    }
+
+    const snapshots = await this.store.getGroupSnapshotsForWindow(windowId, isPrivate);
+    const storeIds = new Set(
+      allTabs.map((t) => t.cookieStoreId || this.constants.DEFAULT_COOKIE_STORE_ID)
+    );
+
+    for (const storeId of Object.keys(snapshots || {})) {
+      if (storeId) storeIds.add(storeId);
+    }
+
+    for (const storeId of storeIds) {
+      await this.restoreGroupsForStore(windowId, storeId, isPrivate);
+    }
+
+    await this.spaceService.setWindowActiveSpaceId(windowId, null, isPrivate);
+    await this.iconService.setActionIcon(windowId, null);
+  }
+
   async switchSpace(spaceId, windowId) {
     return this.runWindowSwitchLocked(windowId, () => this.switchSpaceInternal(spaceId, windowId));
   }

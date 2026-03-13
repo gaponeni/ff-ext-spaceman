@@ -83,6 +83,14 @@ class LocalWindowStateStore {
     await this.setGroupSnapshotsByWindow(map);
   }
 
+  async getGroupSnapshotsForWindow(windowId, isPrivate = false) {
+    if (isPrivate) {
+      return this.privateGroupSnapshotsByWindow[String(windowId)] || {};
+    }
+    const map = await this.getGroupSnapshotsByWindow();
+    return map[String(windowId)] || {};
+  }
+
   async getWindowActiveSpaceId(windowId, isPrivate) {
     if (isPrivate) return this.privateActiveByWindow[String(windowId)] ?? null;
     const activeByWindow = await this.getActiveByWindow();

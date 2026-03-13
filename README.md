@@ -19,6 +19,7 @@ Space Manager is a Firefox WebExtension that turns Container Tabs into workspace
 - Keeps tab groups isolated by Space and restores group metadata when returning.
 - Colors the toolbar icon based on the active Space color.
 - Recreates some newly created default-store tabs inside the active Space or opener container.
+- Recovery action in Settings: **Reset Spaces View** (current window) to show all tabs, restore saved groups, and switch to **No Space** without changing container identities.
 
 ## Screenshots
 
@@ -47,6 +48,12 @@ Space Manager is a Firefox WebExtension that turns Container Tabs into workspace
 - Create, rename, and delete containers in Firefox settings.
 - Space Manager reflects those container changes automatically.
 - The extension does not maintain a separate container CRUD model.
+
+## Recovery
+
+- Use **Settings -> Recovery -> Reset Spaces View** to recover a window view.
+- The action shows all tabs in the current window, restores saved tab groups, and switches that window to **No Space**.
+- Container identities (`cookieStoreId`) are preserved.
 
 ## Development
 
