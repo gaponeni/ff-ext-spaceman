@@ -1,6 +1,7 @@
 const listNode = document.getElementById("space-list");
 const warningNode = document.getElementById("warning");
 const itemTemplate = document.getElementById("item-template");
+const optionsButton = document.getElementById("open-options");
 
 const state = {
   spaces: [],
@@ -103,6 +104,19 @@ async function refresh() {
       }
     });
   }
+}
+
+if (optionsButton) {
+  optionsButton.addEventListener("click", async () => {
+    try {
+      await browser.runtime.openOptionsPage();
+      window.close();
+    } catch (_error) {
+      const optionsUrl = browser.runtime.getURL("settings/index.html");
+      await browser.tabs.create({ url: optionsUrl });
+      window.close();
+    }
+  });
 }
 
 refresh();
